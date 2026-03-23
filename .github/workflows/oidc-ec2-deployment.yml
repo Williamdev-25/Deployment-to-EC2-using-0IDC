@@ -22,31 +22,25 @@ jobs:
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@main
-        with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.EC2_USER }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+      - name: Upload files to S3
+        run: |
+          aws s3 sync . s3://${{ vars.S3_BUCKET }}/ --exclude ".git/*" --exclude ".github/*"
 
-      - name: Executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_DNS }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo systemctl daemon-reload
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            cd home
-            # Remove existing contents of /var/www/html
-            sudo rm -rf /var/www/html/*
-            # Move new files to /var/www/html
-            sudo mv * /var/www/html
+      - name: Deploy via SSM
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ vars.EC2_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands='[
+              "sudo apt-get -y update",
+              "sudo apt-get install -y apache2",
+              "sudo systemctl daemon-reload",
+              "sudo systemctl start apache2",
+              "sudo systemctl enable apache2",
+              "sudo rm -rf /var/www/html/*",
+              "sudo aws s3 sync s3://${{ vars.S3_BUCKET }}/ /var/www/html/"
+            ]' \
+            --region ${{ vars.AWS_REGION }}
