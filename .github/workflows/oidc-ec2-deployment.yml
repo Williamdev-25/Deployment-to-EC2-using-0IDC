@@ -22,19 +22,19 @@ jobs:
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_IAM_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Upload files to S3
         run: |
           cp index-ec2.html index.html
           cp style-ec2.css style.css
-          aws s3 sync . s3://${{ vars.S3_BUCKET }}/ --exclude ".git/*" --exclude ".github/*"
+          aws s3 sync . s3://${{ secrets.S3_BUCKET }}/ --exclude ".git/*" --exclude ".github/*"
 
       - name: Deploy via SSM
         run: |
           aws ssm send-command \
-            --instance-ids ${{ vars.EC2_INSTANCE_ID }} \
+            --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters commands='[
               "sudo apt-get -y update",
@@ -43,6 +43,6 @@ jobs:
               "sudo systemctl start apache2",
               "sudo systemctl enable apache2",
               "sudo rm -rf /var/www/html/*",
-              "sudo aws s3 sync s3://${{ vars.S3_BUCKET }}/ /var/www/html/"
+              "sudo aws s3 sync s3://${{ secrets.S3_BUCKET }}/ /var/www/html/"
             ]' \
-            --region ${{ vars.AWS_REGION }}
+            --region ${{ secrets.AWS_REGION }}
