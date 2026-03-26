@@ -27,6 +27,8 @@ jobs:
 
       - name: Upload files to S3
         run: |
+          cp index-ec2.html index.html
+          cp style-ec2.css style.css
           aws s3 sync . s3://${{ vars.S3_BUCKET }}/ --exclude ".git/*" --exclude ".github/*"
 
       - name: Deploy via SSM

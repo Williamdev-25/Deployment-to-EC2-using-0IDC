@@ -10,7 +10,7 @@
   <header>
     <h1>William</h1>
     <p>DevOps Engineer</p>
-    <p style="font-size:0.75rem;background:#0a58ca;display:inline-block;padding:2px 10px;border-radius:12px;letter-spacing:0.05em;">🚀 Deployed on ECS Fargate</p>
+    <p style="font-size:0.75rem;background:#bf360c;display:inline-block;padding:2px 10px;border-radius:12px;letter-spacing:0.05em;">🖥️ Deployed on EC2</p>
     <nav>
       <a href="index.html">Home</a>
       <a href="about.html">About</a>
@@ -37,13 +37,13 @@
     </section>
 
     <section id="deployment-info">
-      <h2>Deployment Stack (ECS)</h2>
+      <h2>Deployment Stack (EC2)</h2>
       <ul>
-        <li>Container orchestration via AWS ECS Fargate</li>
-        <li>Docker images stored in Amazon ECR (Public)</li>
+        <li>Application hosted on AWS EC2 with Apache web server</li>
+        <li>Files synced from GitHub to S3, then pulled to EC2 via SSM</li>
         <li>CI/CD powered by GitHub Actions with OIDC authentication</li>
         <li>Zero long-lived AWS credentials — fully role-based access</li>
-        <li>Task definitions managed as JSON and rendered dynamically per deploy</li>
+        <li>Instance managed without SSH — commands run via AWS Systems Manager</li>
       </ul>
     </section>
   </main>
